@@ -32,12 +32,6 @@ class DataCleaning:
         numbers_mask = users_df['first_name'].str.contains('\d')
         users_df = users_df.drop(users_df[numbers_mask].index) 
 
-        # Converting the date_of_birth column to datetime & coercing invalid values to NaN
-        users_df['date_of_birth'] = pd.to_datetime(users_df['date_of_birth'], errors='coerce')
-
-        # Converting the join_date column to datetime & coercing invalid values to NaN
-        users_df['join_date'] = pd.to_datetime(users_df['join_date'], errors='coerce')
-
         # Replacing all newline characters in the address column with commas
         users_df['address'] = users_df['address'].str.replace('\n', ', ')
 
@@ -66,17 +60,21 @@ class DataCleaning:
 
         # Removing any duplicate rows
         card_data_df = card_data_df.drop_duplicates() 
+        card_data_df = card_data_df.reset_index(drop=True)
 
         # Removing all rows with anomaly values e.g. "NULL" strings and alphanumeric strings
-        anomaly_values = card_data_df[~card_data_df['expiry_date'].str.match(r'\d{2}/\d{2}')].index
-        card_data_df = card_data_df.drop(anomaly_values)
-
-        # Converting 'date_payment_confirmed' column to datetime
-        card_data_df['date_payment_confirmed'] = pd.to_datetime(card_data_df['date_payment_confirmed'], errors='coerce')
+        anomaly_values = card_data_df[~card_data_df['expiry_date'].str.match(r'\d{2}/\d{2}')]
+        card_data_df = card_data_df.drop(anomaly_values.index)
+        card_data_df = card_data_df.reset_index(drop=True)
 
         # Removing all rows with NaN / Null / NaT values
         card_data_df = card_data_df.dropna()
+        card_data_df = card_data_df.reset_index(drop=True)
 
+        # Replace '?' with an empty string only in rows where 'card_number' contains a question mark
+        card_data_df['card_number'] = card_data_df['card_number'].astype(str)
+        card_data_df['card_number'] = card_data_df['card_number'].apply(lambda x: x.lstrip('?'))
+        
         # Resetting the index after all row removals
         card_data_df = card_data_df.reset_index(drop=True)
 
